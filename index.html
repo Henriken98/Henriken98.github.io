@@ -128,7 +128,7 @@
         var db = firebase.firestore();
 
         var todoCollection = db.collection('score');
-        todoCollection.orderBy('Tid', 'desc').limit(17).onSnapshot(
+        todoCollection.orderBy('Tid', 'asc').limit(17).onSnapshot(
             function (collectionSnapshot) {
 
 
