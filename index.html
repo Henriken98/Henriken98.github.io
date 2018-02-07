@@ -3,18 +3,14 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>reaksjons tid</title>
 </head>
 <style>
-    
-    p:hover
-    {background-color:Highlight;}
-
-    a
-    {text-decoration:underline;
-      color: blue;
-      cursor: pointer;
+    p:hover {
+        background-color: Highlight;
     }
+
+
     body {
         background-color: dimgrey;
     }
@@ -24,8 +20,8 @@
         height: 600px;
         background-color: linen;
         border: 2px solid black;
-        border-radius: 15px;
         float: right;
+        border-radius: 15px;
     }
 
     #bord {
@@ -39,7 +35,6 @@
         border-radius: 50%;
         width: 50px;
         height: 50px;
-      
         float: left;
         margin: 20px;
     }
@@ -53,17 +48,16 @@
     }
 </style>
 <body>
-   
     <div id="score">
         <div>
-           
+
         </div>
         <div id="todo">loading...</div>
 
     </div>
     <div id="bord">
-        Name:</br>
-        <input  id="navn" type="text"/>
+        Name:<br />
+        <input  oninput="nameE(this)" id="navn" type="text" />
         <div id="info"></div>
         <div class="lamp first" onclick="turnOff(this)"></div>
         <div class="lamp" onclick="turnOff(this)"></div>
@@ -84,8 +78,9 @@
     <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase-firestore.js"></script>
     <script>
-
+        var infoDiv = document.getElementById('info');
         var startTime = new Date().getTime();
+        var currentScoreObjectId;
         turnOnRandom();
         var spentSeconds;
         function turnOnRandom() {
@@ -100,9 +95,10 @@
             if (selectedElementClassList.contains("lightOn")) {
                 var finishTime = new Date().getTime();
                 var spentMilliseconds = Math.floor(finishTime - startTime);
-                 spentSeconds = spentMilliseconds / 1000;
-                 document.getElementById('info').innerHTML = 'Du brukte ' + spentSeconds + ' sekunder.'
-                 add(); 
+                spentSeconds = spentMilliseconds / 1000;
+                document.getElementById('info').innerHTML = 'Du brukte ' + spentSeconds + ' sekunder.'
+                add();
+
                 startTime = new Date().getTime();
                 selectedElementClassList.remove("lightOn");
                 turnOnRandom();
@@ -115,7 +111,7 @@
 
 
 
-        // Initialize Firebase
+        //Firebase
         var config = {
             apiKey: "AIzaSyCAIBOvkU-zwolSCYHslEOkJodGDz5vu70",
             authDomain: "min-jatakk.firebaseapp.com",
@@ -128,31 +124,73 @@
         var db = firebase.firestore();
 
         var todoCollection = db.collection('score');
-        todoCollection.orderBy('Tid', 'asc').limit(17).onSnapshot(
+
+        todoCollection.orderBy('Tid', 'asc').limit(30).onSnapshot(
             function (collectionSnapshot) {
+
+
 
 
                 let html = '<ul>';
                 collectionSnapshot.forEach(
                     function (todoItemsSnapshot) {
                         let todoItem = todoItemsSnapshot.data();
-                        html += '<p>' + todoItem.Navn + ' (' + todoItem.Tid + ')  </p>';
+
+                        html += '<li>' + todoItem.Navn + ' (' + todoItem.Tid + ')  </li>';
+
                     });
+
                 html += '</ul>';
                 document.getElementById('todo').innerHTML = html;
 
+
             });
         function add() {
-            var navn = document.getElementById("navn").value;
-            let todoItem = {
-                Navn: navn,
-                Tid: spentSeconds
-                
-            };
-            todoCollection.add(todoItem);
+            if (currentScoreObjectId) {
+                console.log('Bruker eksisterende objekt');
+                //if (spentSeconds < currentScoreObject.Tid) {
+                todoCollection.doc(currentScoreObjectId).update({ Tid: spentSeconds });
+                //}
+            } else {
+                console.log('Lager nytt objekt');
+                var navn = document.getElementById("navn").value;
+
+                let todoItem = {
+                    Navn: navn,
+                    Tid: spentSeconds
+
+                };
+                todoCollection.add(todoItem);
+                nameE2(todoItem.Navn);
+            }
         }
 
-       
+        function nameE(input) {
+            infoDiv.innerHTML = input.value;
+            nameE2(input.value);
+        }
+
+        function nameE2(navn) {
+
+            todoCollection.where('Navn', '==', navn)
+                .limit(1)
+                .get()
+                .then(function (scoreSnapshots) {
+                    scoreSnapshots.forEach(function (scoreSnapshot) {
+                        let score = scoreSnapshot.data();
+                        currentScoreObjectId = scoreSnapshot.id;
+                        infoDiv.innerHTML = navn + ' ' + score.Tid;
+                    });
+                    
+                });
+        }
+     // function enter() {
+     //     if (event.keyCode == 13) {
+           
+     //         location.reload();
+
+     //     }
+     //}
     </script>
 </body>
 </html>
